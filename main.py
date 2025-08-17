@@ -1,3 +1,18 @@
+"""
+日本のことわざを各種LLM API（OpenAI、Anthropic Claude、Google Gemini、LMstudioのローカルモデル）から取得して表示するCLIツール。
+
+主なポイント:
+- 依存ライブラリ: openai, anthropic, google-generativeai, python-dotenv, requests(LMstudioの疎通確認)
+- 環境変数:
+  - OPENAI_API_KEY
+  - CLAUDE_API_KEY
+  - GEMINI_API_KEY
+  - LMSTUDIO_BASE_URL (任意、例: http://localhost:1234/v1)
+  - LMSTUDIO_API_KEY (任意、デフォルト: lmstudio)
+  - LMSTUDIO_MODEL (任意、LMstudioにロード済みのモデル名)
+- 実行方法: python main.py
+"""
+
 import os
 import openai
 from openai import OpenAI
@@ -5,7 +20,9 @@ import google.generativeai as genai
 import anthropic
 from dotenv import load_dotenv
 
+# ローカル開発時に`.env`から環境変数を読み込む
 load_dotenv()
+
 
 def get_proverb_openai():
     """
@@ -22,6 +39,7 @@ def get_proverb_openai():
     client = OpenAI(api_key=api_key)
     
     try:
+        # モデル名は利用契約とAPI提供状況に合わせて適宜更新してください
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -52,6 +70,7 @@ def get_proverb_claude():
     try:
         client = anthropic.Anthropic(api_key=api_key)
         
+        # Claudeのモデル指定は世代/日付で更新されるため、運用時に見直してください
         response = client.messages.create(
             model="claude-3-haiku-20240307",
             max_tokens=150,
@@ -82,6 +101,7 @@ def get_proverb_gemini():
     try:
         genai.configure(api_key=api_key)
         
+        # 速度や品質要件に応じてモデルを切り替えてください
         model = genai.GenerativeModel('gemini-2.0-flash')
         # model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content(
@@ -106,8 +126,10 @@ def get_proverb_lmstudio():
     model_name = os.environ.get("LMSTUDIO_MODEL", "llama3")
     
     try:
+        # 遅延インポート: LMstudio利用時のみrequestsが必要
         import requests
         try:
+            # 疎通確認: サーバー/モデル一覧エンドポイントにアクセスして起動状態を検証
             response = requests.get(f"{base_url}/models", timeout=5)
             if response.status_code != 200:
                 return f"エラー: LMstudioサーバーが応答していません。ステータスコード: {response.status_code}\n\nLMstudioが起動していることを確認してください。"
