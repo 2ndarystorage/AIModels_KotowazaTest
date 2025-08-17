@@ -1,3 +1,20 @@
+"""
+日本のことわざジェネレーター (CLI)
+
+このスクリプトは、複数のLLM API (OpenAI / Anthropic Claude / Google Gemini / LMstudio) を
+使用して日本のことわざを1つ取得し、CLI上に表示します。
+
+事前準備 (.env に設定):
+- OPENAI_API_KEY: OpenAI API キー
+- CLAUDE_API_KEY: Anthropic Claude API キー
+- GEMINI_API_KEY: Google Gemini API キー
+- (任意) LMSTUDIO_BASE_URL: LMstudio のベースURL (例: http://localhost:1234/v1)
+- (任意) LMSTUDIO_API_KEY: LMstudio 用のAPIキー (デフォルト: "lmstudio")
+- (任意) LMSTUDIO_MODEL: 使用するローカルモデル名 (例: "llama3")
+
+実行方法:
+- `python main.py` を実行し、メニューから使用するAPIを選択します。
+"""
 import os
 import openai
 from openai import OpenAI
@@ -7,12 +24,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_proverb_openai():
+def get_proverb_openai() -> str:
     """
-    OpenAIのAPIを使用して日本のことわざを取得する関数
-    
-    Returns:
-        str: 取得したことわざ
+    OpenAI の Chat Completions API を使用して日本のことわざを取得します。
+
+    環境変数:
+        - OPENAI_API_KEY: OpenAI の API キー。
+
+    戻り値:
+        str: 取得したことわざとその簡潔な説明。
+             エラー時は、原因を含むエラーメッセージの文字列を返します。
+
+    備考:
+        - 利用モデル: "gpt-3.5-turbo" (環境や契約に応じて変更可能)
+        - 最大トークン数は簡潔な応答を想定して 150 に設定しています。
     """
     api_key = os.environ.get("OPENAI_API_KEY")
     
@@ -37,12 +62,20 @@ def get_proverb_openai():
     except Exception as e:
         return f"エラー: OpenAI APIリクエスト中に問題が発生しました: {str(e)}"
 
-def get_proverb_claude():
+def get_proverb_claude() -> str:
     """
-    Anthropic ClaudeのAPIを使用して日本のことわざを取得する関数
-    
-    Returns:
-        str: 取得したことわざ
+    Anthropic Claude API を使用して日本のことわざを取得します。
+
+    環境変数:
+        - CLAUDE_API_KEY: Anthropic Claude の API キー。
+
+    戻り値:
+        str: 取得したことわざとその簡潔な説明。
+             エラー時は、原因を含むエラーメッセージの文字列を返します。
+
+    備考:
+        - 利用モデル: "claude-3-haiku-20240307" (用途に応じて変更可能)
+        - 最大トークン数は簡潔な応答を想定して 150 に設定しています。
     """
     api_key = os.environ.get("CLAUDE_API_KEY")
     
@@ -67,12 +100,19 @@ def get_proverb_claude():
     except Exception as e:
         return f"エラー: Claude APIリクエスト中に問題が発生しました: {str(e)}"
 
-def get_proverb_gemini():
+def get_proverb_gemini() -> str:
     """
-    Google GeminiのAPIを使用して日本のことわざを取得する関数
-    
-    Returns:
-        str: 取得したことわざ
+    Google Gemini API を使用して日本のことわざを取得します。
+
+    環境変数:
+        - GEMINI_API_KEY: Google Gemini の API キー。
+
+    戻り値:
+        str: 取得したことわざとその簡潔な説明。
+             エラー時は、原因を含むエラーメッセージの文字列を返します。
+
+    備考:
+        - 利用モデル: 'gemini-2.0-flash' (コメント行の 'gemini-pro' などへ変更可能)
     """
     api_key = os.environ.get("GEMINI_API_KEY")
     
@@ -94,12 +134,23 @@ def get_proverb_gemini():
     except Exception as e:
         return f"エラー: Gemini APIリクエスト中に問題が発生しました: {str(e)}"
 
-def get_proverb_lmstudio():
+def get_proverb_lmstudio() -> str:
     """
-    LMstudioのローカルモデルを使用して日本のことわざを取得する関数
-    
-    Returns:
-        str: 取得したことわざ
+    LMstudio のローカルモデルを使用して日本のことわざを取得します。
+
+    環境変数 (任意):
+        - LMSTUDIO_BASE_URL: LMstudio のベースURL。デフォルト: "http://localhost:1234/v1"
+        - LMSTUDIO_API_KEY: LMstudio 用のAPIキー。デフォルト: "lmstudio"
+        - LMSTUDIO_MODEL: 使用するローカルモデル名。デフォルト: "llama3"
+
+    戻り値:
+        str: 取得したことわざとその簡潔な説明。
+             エラー時は、原因と対処ヒントを含むエラーメッセージの文字列を返します。
+
+    処理概要:
+        1) /models エンドポイントでサーバーの起動可否を確認
+        2) 利用可能なモデル一覧を取得して、指定モデルの存在を検証
+        3) Chat Completions 形式で応答を生成
     """
     base_url = os.environ.get("LMSTUDIO_BASE_URL", "http://localhost:1234/v1")
     api_key = os.environ.get("LMSTUDIO_API_KEY", "lmstudio")
@@ -142,9 +193,12 @@ def get_proverb_lmstudio():
     except Exception as e:
         return f"エラー: LMstudio APIリクエスト中に問題が発生しました: {str(e)}\n\nLMstudioの設定を確認してください。"
 
-def main():
+def main() -> None:
     """
-    メイン関数: APIを選択してことわざを取得して表示する
+    メイン関数: 対話型メニューから利用する API を選択し、ことわざを取得して表示します。
+
+    - '1'〜'4' または 'q' を入力して操作します。
+    - 各 API 呼び出しの結果は、成功時はことわざ文、失敗時はエラーメッセージとして表示されます。
     """
     print("日本のことわざジェネレーター")
     print("-" * 30)
