@@ -110,3 +110,20 @@ q. 終了
 ## Completion Status
 
 - Usable: 単一スクリプトの対話型ツールとしては完成度が高いが、自動テストや配布手順は未整備
+
+## Program Summary
+
+- CLIで起動し、OpenAI / Anthropic Claude / Google Gemini / LMstudio のいずれかを選んで日本のことわざ1件と意味を生成・表示する
+- APIキーは `.env` の環境変数から読み込む（LMstudioはローカルサーバー起動が前提）
+
+## How to Use
+
+- `pip install openai google-generativeai anthropic python-dotenv`
+- `.env` に `OPENAI_API_KEY` / `CLAUDE_API_KEY` / `GEMINI_API_KEY` を設定（LMstudioは任意で `LMSTUDIO_*` を設定）
+- `python main.py`
+- メニューでAPIを選択
+- Not verified
+
+## Completion Status
+
+- Usable: 単一スクリプトとして主要機能とエラーメッセージは揃っているが、テスト・配布・設定検証の自動化は未整備
